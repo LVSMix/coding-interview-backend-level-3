@@ -6,23 +6,32 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteItem = exports.updateItem = exports.createItem = exports.getItemById = exports.getAllItems = void 0;
 const Item_1 = __importDefault(require("../models/Item"));
 const getAllItems = async () => {
-    return await Item_1.default.find();
+    const items = (await Item_1.default.find()).map(item => item.toJSON());
+    return items;
 };
 exports.getAllItems = getAllItems;
 const getItemById = async (id) => {
-    return await Item_1.default.findById(id);
+    var _a;
+    const item = (_a = (await Item_1.default.findOne({ id: id }))) === null || _a === void 0 ? void 0 : _a.toJSON();
+    return item || null;
 };
 exports.getItemById = getItemById;
 const createItem = async (data) => {
     const newItem = new Item_1.default(data);
-    return await newItem.save();
+    return (await newItem.save()).toJSON();
 };
 exports.createItem = createItem;
 const updateItem = async (id, data) => {
-    return await Item_1.default.findByIdAndUpdate(id, data, { new: true });
+    const itemUpdated = await Item_1.default.findOneAndUpdate({ id: id }, data, { new: true });
+    if (!itemUpdated)
+        return null;
+    return itemUpdated.toJSON();
 };
 exports.updateItem = updateItem;
 const deleteItem = async (id) => {
-    return await Item_1.default.findByIdAndDelete(id);
+    const itemDeleted = await Item_1.default.findOneAndDelete({ id: id });
+    if (!itemDeleted)
+        return null;
+    return itemDeleted.toJSON();
 };
 exports.deleteItem = deleteItem;

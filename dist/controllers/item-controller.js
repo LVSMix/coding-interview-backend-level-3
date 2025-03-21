@@ -32,20 +32,45 @@ var __importStar = (this && this.__importStar) || (function () {
         return result;
     };
 })();
+var __rest = (this && this.__rest) || function (s, e) {
+    var t = {};
+    for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p) && e.indexOf(p) < 0)
+        t[p] = s[p];
+    if (s != null && typeof Object.getOwnPropertySymbols === "function")
+        for (var i = 0, p = Object.getOwnPropertySymbols(s); i < p.length; i++) {
+            if (e.indexOf(p[i]) < 0 && Object.prototype.propertyIsEnumerable.call(s, p[i]))
+                t[p[i]] = s[p[i]];
+        }
+    return t;
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteItem = exports.updateItem = exports.createItem = exports.getItem = exports.getItems = void 0;
 const itemService = __importStar(require("../services/item-service"));
-const Item_1 = __importDefault(require("../models/Item"));
+const joi_1 = __importDefault(require("joi"));
+const itemSchema = joi_1.default.object({
+    name: joi_1.default.string().required().empty().messages({
+        "string.base": `"name" should be a string`,
+        "string.empty": `"name" is not empty`,
+        "any.required": `"name" is required`,
+    }),
+    price: joi_1.default.number().required().positive().empty().messages({
+        "number.base": `Field "price" is a number`,
+        "number.empty": `Field "price" is not empty`,
+        "number.positive": `Field "price" cannot be negative`,
+        "any.required": `Field "price" is required`,
+    }),
+});
 const getItems = async (req, res) => {
     try {
         const items = await itemService.getAllItems();
-        res.response(items).code(200);
+        console.log("Ítems obtenidos:", items);
+        return res.response(items).code(200);
     }
     catch (error) {
-        res.response({ message: "Error obteniendo items", error }).code(500);
+        return res.response({ message: "Error obteniendo items", error }).code(500);
     }
 };
 exports.getItems = getItems;
@@ -54,32 +79,57 @@ const getItem = async (req, res) => {
         const item = await itemService.getItemById(req.params.id);
         if (!item)
             return res.response({ message: "Item no encontrado" }).code(404);
-        res.response(item);
+        return res.response(item);
     }
     catch (error) {
-        res.response({ message: "Error obteniendo el item", error }).code(500);
+        return res.response({ message: "Error obteniendo el item", error }).code(500);
     }
 };
 exports.getItem = getItem;
 const createItem = async (req, res) => {
     try {
-        const newItem = await itemService.createItem(new Item_1.default(req.payload));
-        res.response(newItem).code(201);
+        const { error, value } = itemSchema.validate(req.payload);
+        if (error) {
+            const errors = error.details.map(detail => {
+                var _a;
+                return ({
+                    field: (_a = detail.context) === null || _a === void 0 ? void 0 : _a.key, // Campo que falló
+                    message: detail.message, // Mensaje de error personalizado
+                });
+            });
+            return res.response({ errors }).code(400);
+        }
+        console.log("Payload recibido:", value);
+        const newItem = await itemService.createItem(value);
+        console.log("Ítem creado:", newItem);
+        return res.response(newItem).code(201);
     }
     catch (error) {
-        res.response({ message: "Error creando item", error }).code(500);
+        return res.response({ message: "Error creando item", error }).code(500);
     }
 };
 exports.createItem = createItem;
 const updateItem = async (req, res) => {
     try {
-        const updatedItem = await itemService.updateItem(req.params.id, new Item_1.default(req.payload));
+        const { error, value } = itemSchema.validate(req.payload);
+        if (error) {
+            const errors = error.details.map(detail => {
+                var _a;
+                return ({
+                    field: (_a = detail.context) === null || _a === void 0 ? void 0 : _a.key, // Campo que falló
+                    message: detail.message, // Mensaje de error personalizado
+                });
+            });
+            return res.response({ errors }).code(400);
+        }
+        const _a = value, { _id } = _a, updateData = __rest(_a, ["_id"]);
+        const updatedItem = await itemService.updateItem(req.params.id, updateData);
         if (!updatedItem)
             return res.response({ message: "Item no encontrado" }).code(404);
-        res.response(updatedItem).code(200);
+        return res.response(updatedItem).code(200);
     }
     catch (error) {
-        res.response({ message: "Error actualizando item", error }).code(500);
+        return res.response({ message: "Error actualizando item", error }).code(500);
     }
 };
 exports.updateItem = updateItem;
@@ -88,10 +138,10 @@ const deleteItem = async (req, res) => {
         const deletedItem = await itemService.deleteItem(req.params.id);
         if (!deletedItem)
             return res.response({ message: "Item no encontrado" }).code(404);
-        res.response({ message: "Item eliminado correctamente" }).code(200);
+        return res.response({ message: "Item eliminado correctamente" }).code(204);
     }
     catch (error) {
-        res.response({ message: "Error eliminando item", error }).code(500);
+        return res.response({ message: "Error eliminando item", error }).code(500);
     }
 };
 exports.deleteItem = deleteItem;

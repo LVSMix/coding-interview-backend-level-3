@@ -1,22 +1,28 @@
 import Item, { IItem } from "../models/Item";
 
 export const getAllItems = async (): Promise<IItem[]> => {
-    return await Item.find();
+    const items = (await Item.find()).map(item => item.toJSON());
+    return items;
 };
 
 export const getItemById = async (id: string): Promise<IItem | null> => {
-    return await Item.findById(id);
+    const item = (await Item.findOne({ id: id }))?.toJSON();
+    return item || null;
 };
 
 export const createItem = async (data: IItem): Promise<IItem> => {
     const newItem = new Item(data);
-    return await newItem.save();
+    return (await newItem.save()).toJSON();
 };
 
 export const updateItem = async (id: string, data: Partial<IItem>): Promise<IItem | null> => {
-    return await Item.findByIdAndUpdate(id, data, { new: true });
+    const itemUpdated = await Item.findOneAndUpdate({ id: id }, data, { new: true });
+    if (!itemUpdated) return null;
+    return itemUpdated.toJSON();
 };
 
 export const deleteItem = async (id: string): Promise<IItem | null> => {
-    return await Item.findByIdAndDelete(id);
+    const itemDeleted = await Item.findOneAndDelete({ id: id });
+    if (!itemDeleted) return null;
+    return itemDeleted.toJSON();
 };
