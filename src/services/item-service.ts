@@ -11,7 +11,8 @@ export const getItemById = async (id: string): Promise<IItem | null> => {
 };
 
 export const createItem = async (data: IItem): Promise<IItem> => {
-    const newItem = new Item(data);
+    const { id, ...itemData } = data; // Exclude the `id` field
+    const newItem = new Item(itemData);
     return (await newItem.save()).toJSON();
 };
 

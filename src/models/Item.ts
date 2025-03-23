@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document, HydratedDocument } from "mongoose";
+import mongoose, { Schema, Document, HydratedDocument, CallbackError } from "mongoose";
 import Counter from "./Counter";
 
 export interface IItem extends Document {
@@ -30,6 +30,7 @@ ItemSchema.pre("save", async function (next) {
         next();
     } catch (error) {
         console.error("Error asignando ID:", error);
+        next(error as CallbackError);
     }
 });
 // Configura la transformación para cambiar `_id` a `id` y eliminar `__v`

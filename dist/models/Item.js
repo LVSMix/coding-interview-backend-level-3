@@ -57,6 +57,7 @@ ItemSchema.pre("save", async function (next) {
     }
     catch (error) {
         console.error("Error asignando ID:", error);
+        next(error);
     }
 });
 // Configura la transformación para cambiar `_id` a `id` y eliminar `__v`

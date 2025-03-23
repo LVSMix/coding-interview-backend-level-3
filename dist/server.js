@@ -8,6 +8,7 @@ const hapi_1 = __importDefault(require("@hapi/hapi"));
 const routes_1 = require("./routes");
 const dotenv_1 = __importDefault(require("dotenv"));
 const db_1 = __importDefault(require("./config/db"));
+const mongoose_1 = __importDefault(require("mongoose"));
 const getServer = () => {
     const server = hapi_1.default.server({
         host: 'localhost',
@@ -20,6 +21,15 @@ const getServer = () => {
 };
 const initializeServer = async () => {
     const server = getServer();
+    if (process.env.NODE_ENV === 'test') {
+        const itemCollection = mongoose_1.default.connection.collection('items');
+        const counterCollection = mongoose_1.default.connection.collection('counters');
+        await itemCollection.deleteMany({});
+        await counterCollection.deleteMany({});
+        // Initialize the Counter document for "item"
+        await counterCollection.insertOne({ name: "item", seq: 0 });
+        console.log("🧪 Colecciones limpiadas para pruebas");
+    }
     await server.initialize();
     return server;
 };

@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import connectDB from "./config/db";
 import Item from './models/Item';
 import Counter from './models/Counter';
+import mongoose from 'mongoose';
 
 
 const getServer = () => {
@@ -20,13 +21,15 @@ const getServer = () => {
 
 export const initializeServer = async () => {
     const server = getServer()
-    // Limpia la base de datos si el entorno es de pruebas
     if (process.env.NODE_ENV === 'test') {
-        console.log("Limpieza de la base de datos para pruebas...");
-        await Item.deleteMany({}); // Limpia la colección de ítems
-        await Counter.deleteMany({});
+        const itemCollection = mongoose.connection.collection('items');
+        const counterCollection = mongoose.connection.collection('counters');
+        await itemCollection.deleteMany({});
+        await counterCollection.deleteMany({});
+        // Initialize the Counter document for "item"
+        await counterCollection.insertOne({ name: "item", seq: 0 });
+        console.log("🧪 Colecciones limpiadas para pruebas");
     }
-
     await server.initialize()
     return server
 }
